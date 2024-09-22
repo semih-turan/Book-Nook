@@ -3,6 +3,7 @@ import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
 import Home from './pages/Home';
 import Publisher from './pages/Publisher';
 import Author from './pages/Author';
+import Categories from './pages/Category';
 import './App.css';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/publishers" element={<Publisher />} />
           <Route path="/authors" element={<Author />} />
+          <Route path="/categories" element={<Categories />} />
         </Routes>
       </Container>
       <footer className="footer">
