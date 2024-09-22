@@ -3,7 +3,7 @@ body, html {
     margin: 0;
     padding: 0;
     font-family: 'Roboto', sans-serif;
-    background-color: #A27B5C;
+    /* background-color: #C1D8C3; */
   }
   
   #root {
@@ -13,8 +13,8 @@ body, html {
   }
   
   .footer {
-    background-color: #DCD7C9; /* Footer arkaplan rengi */
-    color: #2C3639;
+    background-color: #6A9C89; /* Footer arkaplan rengi */
+    color: #fff;
     padding: 20px 0;
     text-align: center;
     margin-top: auto; /* Footer'ı en alta itmek için */
@@ -28,6 +28,7 @@ body, html {
   
   .footer-links a:hover {
     text-decoration: none;
+    color: #CD5C08;
   }
   
   .AppBar {

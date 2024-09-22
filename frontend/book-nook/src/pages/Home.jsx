@@ -1,5 +1,5 @@
 import { Container, Typography } from '@mui/material';
-import libraryImage from '../assets/library-hero.webp';
+import libraryImage from '../assets/library-hero-2.webp';
 
 function Home() {
   return (
@@ -16,7 +16,7 @@ function Home() {
           backgroundSize: 'cover', 
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat', 
-          opacity: 0.7, /* Sadece resmin opaklığını ayarlar */
+          opacity: 0.8, /* Sadece resmin opaklığını ayarlar */
           position: 'absolute',
           top: 0,
           left: 0,
@@ -29,7 +29,7 @@ function Home() {
       <Container style={{ 
         position: 'relative', 
         zIndex: 2, /* Metni resmin üzerine koyar */
-        color: '#2C3639', 
+        color: '#fff', 
         textAlign: 'center', 
         paddingTop: '200px' /* Metni ortalamak için padding ekledik */
       }}>
