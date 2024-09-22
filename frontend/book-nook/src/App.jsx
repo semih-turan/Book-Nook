@@ -4,6 +4,8 @@ import Home from './pages/Home';
 import Publisher from './pages/Publisher';
 import Author from './pages/Author';
 import Categories from './pages/Category';
+import Book from './pages/Book';
+import BookBorrowing from './pages/BookBorrowing';
 import './App.css';
 
 function App() {
@@ -28,6 +30,8 @@ function App() {
           <Route path="/publishers" element={<Publisher />} />
           <Route path="/authors" element={<Author />} />
           <Route path="/categories" element={<Categories />} />
+          <Route path="/books" element={<Book />} />
+          <Route path="/borrowings" element={<BookBorrowing />} />
         </Routes>
       </Container>
       <footer className="footer">
