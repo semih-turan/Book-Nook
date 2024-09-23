@@ -1,106 +1,131 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress } from '@mui/material';
+import { Container, Typography, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
 import axios from 'axios';
-import dayjs from 'dayjs';
 
 function BookBorrowing() {
   const [borrowings, setBorrowings] = useState([]);
+  const [books, setBooks] = useState([]);
   const [open, setOpen] = useState(false);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [selectedBorrowing, setSelectedBorrowing] = useState(null);
   const [borrowerName, setBorrowerName] = useState('');
-  const [borrowerEmail, setBorrowerEmail] = useState('');
+  const [borrowerMail, setBorrowerMail] = useState('');
   const [borrowingDate, setBorrowingDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
-  const [error, setError] = useState('');
+  const [selectedBook, setSelectedBook] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchBorrowings();
+    fetchBooks();
   }, []);
 
   const fetchBorrowings = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(import.meta.env.VITE_APP_BASE_URL + '/api/v1/borrows');
-      if (Array.isArray(response.data)) {
-        setBorrowings(response.data);
-      } else {
-        setBorrowings([]);
-      }
+      const response = await axios.get(import.meta.env.VITE_APP_BASE_URL +'/api/v1/borrows');
+      setBorrowings(response.data);
     } catch (error) {
-      setError('Failed to fetch borrowings');
+      showErrorModal('Failed to fetch borrowings', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchBooks = async () => {
+    try {
+      const response = await axios.get(import.meta.env.VITE_APP_BASE_URL +'/api/v1/books');
+      setBooks(response.data);
+    } catch (error) {
+      showErrorModal('Failed to fetch books', error);
+    }
+  };
+
   const handleAddOrUpdateBorrowing = async () => {
-    if (!borrowerName) {
-      setError('Borrower name cannot be empty');
+    if (!borrowerName || !borrowerMail || !borrowingDate || !selectedBook) {
+      showErrorModal('Please fill in all the fields');
       return;
     }
 
-    if (!borrowerEmail) {
-      setError('Borrower email cannot be empty');
-      return;
-    }
-
-    if (!borrowingDate) {
-      setError('Borrowing date cannot be empty');
-      return;
-    }
+    const borrowingData = {
+      borrowerName,
+      borrowerMail,
+      borrowingDate,
+      returnDate,
+      bookForBorrowingRequest: selectedBook && {
+        id: selectedBook.id,
+        name: selectedBook.name,
+        publicationYear: selectedBook.publicationYear,
+        stock: selectedBook.stock,
+      }
+    };
 
     try {
       if (selectedBorrowing) {
         // Güncelleme işlemi
-        await axios.put( import.meta.env.VITE_APP_BASE_URL + `/api/v1/borrows/${selectedBorrowing.id}`, { 
-          borrowerName, 
-          borrowerEmail, 
-          borrowingDate, 
-          returnDate 
+        await axios.put(import.meta.env.VITE_APP_BASE_URL +`/api/v1/borrows/${selectedBorrowing.id}`, {
+          borrowerName,
+          borrowingDate,
+          returnDate
         });
       } else {
         // Yeni ödünç alma kaydı ekleme işlemi
-        await axios.post(import.meta.env.VITE_APP_BASE_URL + '/api/v1/borrows', { 
-          borrowerName, 
-          borrowerEmail, 
-          borrowingDate, 
-          returnDate 
-        });
+        await axios.post(import.meta.env.VITE_APP_BASE_URL +'/api/v1/borrows', borrowingData);
       }
       fetchBorrowings(); // Ödünç alma kayıtlarını tekrar çek
       handleClose(); // Dialog'u kapat
     } catch (error) {
-      setError('Failed to save borrowing record');
+      showErrorModal('Failed to save borrowing record', error);
     }
   };
 
   const handleDeleteBorrowing = async (id) => {
     try {
-      await axios.delete( import.meta.env.VITE_APP_BASE_URL + `/api/v1/borrows/${id}`);
+      await axios.delete(import.meta.env.VITE_APP_BASE_URL +`/api/v1/borrows/${id}`);
       fetchBorrowings(); // Ödünç alma kayıtlarını tekrar çek
     } catch (error) {
-      setError('Failed to delete borrowing record');
+      showErrorModal('Failed to delete borrowing record', error);
     }
   };
 
   const handleOpen = (borrowing = null) => {
-    setSelectedBorrowing(borrowing);
-    setBorrowerName(borrowing ? borrowing.borrowerName : '');
-    setBorrowerEmail(borrowing ? borrowing.borrowerEmail : '');
-    setBorrowingDate(borrowing ? dayjs(borrowing.borrowingDate).format('YYYY-MM-DD') : '');
-    setReturnDate(borrowing ? dayjs(borrowing.returnDate).format('YYYY-MM-DD') : '');
+    if (borrowing) {
+      setSelectedBorrowing(borrowing);
+      setBorrowerName(borrowing.borrowerName);
+      setBorrowerMail(borrowing.borrowerMail);
+      setBorrowingDate(borrowing.borrowingDate);
+      setReturnDate(borrowing.returnDate);
+      setSelectedBook(borrowing.book);
+    } else {
+      setSelectedBorrowing(null);
+      setBorrowerName('');
+      setBorrowerMail('');
+      setBorrowingDate('');
+      setReturnDate('');
+      setSelectedBook(null);
+    }
     setOpen(true);
   };
 
   const handleClose = () => {
     setSelectedBorrowing(null);
     setBorrowerName('');
-    setBorrowerEmail('');
+    setBorrowerMail('');
     setBorrowingDate('');
     setReturnDate('');
+    setSelectedBook(null);
     setOpen(false);
-    setError('');
+    setErrorMessage('');
+  };
+
+  const showErrorModal = (message, error = null) => {
+    if (error && error.response) {
+      setErrorMessage(`${message}: ${error.response.data.message || error.message}`);
+    } else {
+      setErrorMessage(message);
+    }
+    setErrorModalOpen(true);
   };
 
   return (
@@ -127,6 +152,7 @@ function BookBorrowing() {
                 <TableCell>Borrower Email</TableCell>
                 <TableCell>Borrowing Date</TableCell>
                 <TableCell>Return Date</TableCell>
+                <TableCell>Book Name</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -135,9 +161,10 @@ function BookBorrowing() {
                 <TableRow key={borrowing.id}>
                   <TableCell>{borrowing.id}</TableCell>
                   <TableCell>{borrowing.borrowerName}</TableCell>
-                  <TableCell>{borrowing.borrowerEmail}</TableCell>
-                  <TableCell>{dayjs(borrowing.borrowingDate).format('YYYY-MM-DD')}</TableCell> {/* Tarih formatı */}
-                  <TableCell>{dayjs(borrowing.returnDate).format('YYYY-MM-DD')}</TableCell> {/* Tarih formatı */}
+                  <TableCell>{borrowing.borrowerMail}</TableCell>
+                  <TableCell>{borrowing.borrowingDate}</TableCell>
+                  <TableCell>{borrowing.returnDate}</TableCell>
+                  <TableCell>{borrowing.book.name}</TableCell>
                   <TableCell align="right">
                     <Button 
                       color="primary" 
@@ -178,13 +205,13 @@ function BookBorrowing() {
             label="Borrower Email"
             type="email"
             fullWidth
-            value={borrowerEmail}
-            onChange={(e) => setBorrowerEmail(e.target.value)}
+            value={borrowerMail}
+            onChange={(e) => setBorrowerMail(e.target.value)}
           />
           <TextField
             margin="dense"
             label="Borrowing Date"
-            type="date" // Tarih formatı
+            type="date"
             fullWidth
             InputLabelProps={{
               shrink: true, // Label'in düzgün şekilde yerleşmesi için
@@ -195,7 +222,7 @@ function BookBorrowing() {
           <TextField
             margin="dense"
             label="Return Date"
-            type="date" // Tarih formatı
+            type="date"
             fullWidth
             InputLabelProps={{
               shrink: true, // Label'in düzgün şekilde yerleşmesi için
@@ -203,9 +230,24 @@ function BookBorrowing() {
             value={returnDate}
             onChange={(e) => setReturnDate(e.target.value)}
           />
-          {error && (
+          {!selectedBorrowing && (
+            <FormControl fullWidth margin="dense">
+              <InputLabel>Book</InputLabel>
+              <Select
+                value={selectedBook ? selectedBook.id : ''}
+                onChange={(e) => setSelectedBook(books.find(book => book.id === e.target.value))}
+              >
+                {books.map((book) => (
+                  <MenuItem key={book.id} value={book.id}>
+                    {book.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+          {errorMessage && (
             <Typography color="error" variant="body2">
-              {error}
+              {errorMessage}
             </Typography>
           )}
         </DialogContent>
@@ -215,6 +257,19 @@ function BookBorrowing() {
           </Button>
           <Button onClick={handleAddOrUpdateBorrowing} color="primary">
             {selectedBorrowing ? 'Update' : 'Add'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Error Modal */}
+      <Dialog open={errorModalOpen} onClose={() => setErrorModalOpen(false)}>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">{errorMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setErrorModalOpen(false)} color="primary">
+            Close
           </Button>
         </DialogActions>
       </Dialog>
